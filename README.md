@@ -40,9 +40,14 @@
     * /myCards – This service should send the card details of the logged in user from the DB to the UI
     
 ## Step By Step Guide
-* Create controllers for all the services. (Rest Services)
+* Go to start.spring.io and create a new project. Add SpringWeb and SpringSecurity depenedencies to it.
+* Create a separate package for controllers (Need to add @ComponentScan). Add all the rest controllers. (Rest Services)
     * @GetMapping <- reading data from the database
     * @PostMapping <- reading data and saving to the DB 
-* 
-    
+* By default, Spring Security will secure all the requests made within the application. However as mentioned above, our
+    requirements are different (i.e we shouldn't secure /contact and /notices).
+    * You can go to Postman, create a request and see it yourself. 
+* To override the default behavior, we need to create a config class that extends `WebSecurityConfigurerAdapter` and override its `configure(HttpSecurity http)` class.
+    * `WebSecurityConfigurerAdapter` important method!!
+
 
