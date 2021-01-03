@@ -40,7 +40,9 @@
     * /myCards – This service should send the card details of the logged in user from the DB to the UI
     
 ## Step By Step Guide
-* Create controllers for all the services.
+* Create controllers for all the services. (Rest Services)
+    * @GetMapping <- reading data from the database
+    * @PostMapping <- reading data and saving to the DB 
 * 
     
 
