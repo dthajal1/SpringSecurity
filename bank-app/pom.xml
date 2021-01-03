@@ -8,11 +8,11 @@
 		<version>2.4.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.tutorial</groupId>
+	<groupId>com.spring-security</groupId>
 	<artifactId>bank-app</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>bank-app</name>
-	<description>A web applications simulating online banks.</description>
+	<description>A spring security web application simulating online banks.</description>
 
 	<properties>
 		<java.version>11</java.version>

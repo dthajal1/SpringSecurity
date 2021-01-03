@@ -39,4 +39,8 @@
     * /myLoans – This service should send the loan details of the logged in user from the DB to the UI
     * /myCards – This service should send the card details of the logged in user from the DB to the UI
     
+## Step By Step Guide
+* Create controllers for all the services.
+* 
+    
 
