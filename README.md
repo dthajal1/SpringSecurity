@@ -47,7 +47,10 @@
 * By default, Spring Security will secure all the requests made within the application. However as mentioned above, our
     requirements are different (i.e we shouldn't secure /contact and /notices).
     * You can go to Postman, create a request and see it yourself. 
-* To override the default behavior, we need to create a config class that extends `WebSecurityConfigurerAdapter` and override its `configure(HttpSecurity http)` class.
-    * `WebSecurityConfigurerAdapter` important method!!
+* To override the default behavior, we need to create a config class that extends `WebSecurityConfigurerAdapter` and 
+    override its `configure(HttpSecurity http)` class.
+    * `WebSecurityConfigurerAdapter` <- base class for entire spring security.
+    * `.permitAll()` <- not secured
+    * `.authenticated()` <- secured
 
 

@@ -8,11 +8,23 @@ import org.springframework.security.config.annotation.web.configurers.Expression
 @Configuration
 public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 
+    /*
+        * /myAccount - secured
+        * /myBalance - secured
+        * /myLoans - secured
+        * /myCards - secured
+        * /contact - not secured
+        * /notices - not secured
+    */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        System.out.println("This is copy paste of default configure method inside WebSecurityConfigurerAdapter.");
         http.authorizeRequests((requests) -> {
-            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.anyRequest()).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myAccount")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myLoans")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myCards")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myBalance")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/contact")).permitAll();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/notices")).permitAll();
         });
         http.formLogin();
         http.httpBasic();
