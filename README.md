@@ -109,7 +109,7 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 ## User Details Service and Password Encoder
 * Have to override another method `configure(AuthenticationManagerBuilder auth)` of `WebSecurityConfigurerAdapter`
 * `configure(AuthenticationManagerBuilder auth)` is used to customize user, user details, password encoder, along with Authentication Provider
-### Configuring Users using inMemoryAuthentication 
+### Configuring Multiple Users using InMemoryAuthentication 
 ```java
 public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
@@ -124,6 +124,27 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 }
 ```
+### Configuring Multiple Users using InMemoryUserDetailsManager
+```java
+public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        InMemoryUserDetailsManager userDetailsService = new InMemoryUserDetailsManager();
+        UserDetails adminUser = User.withUsername("admin").password("1234").authorities("admin").build();
+        UserDetails user = User.withUsername("user").password("1234").authorities("read").build();
+        userDetailsService.createUser(adminUser);
+        userDetailsService.createUser(user);
+        auth.userDetailsService(userDetailsService);
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
+    }
+}
+```
+
     
 
 
