@@ -98,15 +98,32 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
          */
 
 //        http.authorizeRequests((requests) -> {
-//            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.anyRequest()).denyAll();
+//            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.anyRequest()).permitAll();
 //        });
 //        http.formLogin();
 //        http.httpBasic(); 
         }
 }
 ```
-    * `.permitAll()` <- not secured
-    * `.authenticated()` <- secured
+
+## User Details Service and Password Encoder
+* Have to override another method `configure(AuthenticationManagerBuilder auth)` of `WebSecurityConfigurerAdapter`
+* `configure(AuthenticationManagerBuilder auth)` is used to customize user, user details, password encoder, along with Authentication Provider
+### Configuring Users using inMemoryAuthentication 
+```java
+public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.inMemoryAuthentication().withUser("admin").password("1234").authorities("admin").and()
+                .withUser("user").password("1234").authorities("read").and()
+                .passwordEncoder(NoOpPasswordEncoder.getInstance()); 
+        // authenticating multiple users
+        // passwordEncoder is a must have or else spring will throw an error
+        // NoOpPasswordEncoder is not recommended
+        // user created inside application.properties won't work anymore because we have created our own set of user here.
+    }
+}
+```
     
 
 
