@@ -18,6 +18,21 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
     */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        /*
+            Default configuration which secures all the requests
+         */
+
+//        http.authorizeRequests((requests) -> {
+//            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.anyRequest()).authenticated();
+//        });
+//        http.formLogin();
+//        http.httpBasic();
+
+
+        /*
+            Custom configuration as per our requirements.
+         */
+
         http.authorizeRequests((requests) -> {
             ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myAccount")).authenticated();
             ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myLoans")).authenticated();
@@ -28,5 +43,26 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
         });
         http.formLogin();
         http.httpBasic();
+
+
+        /*
+            Configuration to deny all requests for all users regardless if they are authenticated or not authenticated.
+         */
+
+//        http.authorizeRequests((requests) -> {
+//            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.anyRequest()).denyAll();
+//        });
+//        http.formLogin();
+//        http.httpBasic();
+
+        /*
+            Configuration to permit all requests for all users.
+         */
+
+//        http.authorizeRequests((requests) -> {
+//            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.anyRequest()).permitAll();
+//        });
+//        http.formLogin();
+//        http.httpBasic();
     }
 }
