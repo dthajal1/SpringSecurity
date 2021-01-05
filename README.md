@@ -162,6 +162,83 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
     all the methods based on your own requirement
 ![User Management](./img/userManagement.png)
 
-    
+### Configuring Users using JdbcUserDetailsManager
+* the columns in the DB table and the instance variables of JdbcUserDetailsManager must be the same.
+    * Tables:
+        * users
+            * columns
+                * username
+                * password
+                * enabled (boolean(true/false)/int(1/0))
+        * authorities 
+            * columns
+                * username
+                * authority
+* have to add required maven dependencies
+```xml
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <scope>runtime</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+</dependencies>
+```
+* have to configure datasource url, datasource username and datasource password inside applictation.properties
+```properties
+# this is not recommended for production ready applications
+spring.datasource.url=jdbc:mysql://localhost:3306/spring_security_users
+spring.datasource.username=spring_security
+spring.datasource.password=spring_security
+```
+* create tables users and authorities inside your database
+```sql
+CREATE TABLE `users` (
+`id` INT NOT NULL AUTO_INCREMENT,
+`username` VARCHAR(45) NOT NULL,
+`password` VARCHAR(45) NOT NULL,
+`enabled` INT NOT NULL,
+PRIMARY KEY (`id`));
+
+CREATE TABLE `authorities` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(45) NOT NULL,
+  `authority` varchar(45) NOT NULL,
+  PRIMARY KEY (`id`));
+```
+* insert data inside the tables you created  
+```sql
+INSERT IGNORE INTO `users` VALUES (NULL, 'happy', '12345', '1');
+INSERT IGNORE INTO `authorities` VALUES (NULL, 'happy', 'write');
+```          
+* have to configure a `JdbcUserDetailsManager` Bean and a passwordEncoder Bean (which will be created and stored inside Spring Context on startup) so that Spring knows which UserDetailsService and Password Encoder to use.
+```java
+@Configuration
+public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+   @Bean
+   // dataSource is created with the datasource that we provided in application.properties
+   public UserDetailsService userDetailsService(DataSource dataSource) {
+       return new JdbcUserDetailsManager(dataSource);
+   }
+
+   @Bean
+   public PasswordEncoder passwordEncoder() {
+       return NoOpPasswordEncoder.getInstance();
+   }
+}
+```  
+* You are now ready to run the program. You can see it yourself that the method `loadUsersByUsername()` inside `JdbcUserDetailsManager` is ran by setting breakpoints.   
+* See [Configuring Users using your own custom implementation of UserDetailsService](#configuring-users-using-your-own-custom-implementation-of-userdetailsservice) if your requirements are different.
+
+### Configuring Users using your own custom implementation of UserDetailsService
+*  
 
 

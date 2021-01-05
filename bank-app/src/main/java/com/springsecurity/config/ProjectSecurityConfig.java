@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 
+import javax.sql.DataSource;
+
 @Configuration
 public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -94,14 +96,19 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
     /*
         Configuring multiple users using InMemoryUserDetailsManager
     */
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        InMemoryUserDetailsManager userDetailsService = new InMemoryUserDetailsManager();
-        UserDetails adminUser = User.withUsername("admin").password("1234").authorities("admin").build();
-        UserDetails user = User.withUsername("user").password("1234").authorities("read").build();
-        userDetailsService.createUser(adminUser);
-        userDetailsService.createUser(user);
-        auth.userDetailsService(userDetailsService);
+//    @Override
+//    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//        InMemoryUserDetailsManager userDetailsService = new InMemoryUserDetailsManager();
+//        UserDetails adminUser = User.withUsername("admin").password("1234").authorities("admin").build();
+//        UserDetails user = User.withUsername("user").password("1234").authorities("read").build();
+//        userDetailsService.createUser(adminUser);
+//        userDetailsService.createUser(user);
+//        auth.userDetailsService(userDetailsService);
+//    }
+
+    @Bean
+    public UserDetailsService userDetailsService(DataSource dataSource) {
+        return new JdbcUserDetailsManager(dataSource);
     }
 
     @Bean
