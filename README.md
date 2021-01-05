@@ -111,6 +111,7 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 * `configure(AuthenticationManagerBuilder auth)` is used to customize user, user details, password encoder, along with Authentication Provider
 ### Configuring Multiple Users using InMemoryAuthentication 
 ```java
+@Configuration
 public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -125,7 +126,9 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 ### Configuring Multiple Users using InMemoryUserDetailsManager
+* This is called InMemoryUserDetailsManager because the users are managed within the Spring Container. 
 ```java
+@Configuration
 public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
@@ -144,6 +147,20 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 }
 ```
+
+## User Management: Important Interfaces and Classes
+* You can view source codes of these interfaces and classes by typing appropriate name inside any java class and pressing Command + Click.
+* Interfaces
+    * UserDetails - base interface
+    * UserDetailsService - if we only need to read users from database
+    * UserDetailsManager - if need to create, update, delete users in database
+* Classes (these classes are already provided by Spring Framework)
+    * InMemoryUserDetailsManager - users are managed within Spring container/context. Used only for demo purposes.
+    * JdbcUserDetailsManager - Ideal for when interacting with databases such as MySQL, Oracle, MongoDB, etc. (Has production-ready features and thus is used in production.)
+    * LdapUserDetailsManager - if you have a requirement where users are maintained inside Ldap Server
+* If for any reason, if these classes doesn't match your requirement, you can implement `UserDetailsManager` and override 
+    all the methods based on your own requirement
+![User Management](./img/userManagement.png)
 
     
 
