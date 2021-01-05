@@ -236,9 +236,111 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```  
 * You are now ready to run the program. You can see it yourself that the method `loadUsersByUsername()` inside `JdbcUserDetailsManager` is ran by setting breakpoints.   
-* See [Configuring Users using your own custom implementation of UserDetailsService](#configuring-users-using-your-own-custom-implementation-of-userdetailsservice) if your requirements are different.
+* See [Configuring Custom Users](#configuring-users-using-your-own-custom-implementation-of-userdetailsservice-or-userdetailsmanager) if your requirements are different.
 
-### Configuring Users using your own custom implementation of UserDetailsService
-*  
+### Configuring Users using your own custom implementation of UserDetailsService or UserDetailsManager
+*  Create a table and insert data inside your DB
+```sql
+CREATE TABLE `customer` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `email` varchar(45) NOT NULL,
+  `pwd` varchar(45) NOT NULL,
+  `role` varchar(45) NOT NULL,
+  PRIMARY KEY (`id`)
+);
 
+INSERT INTO `customer` (`email`, `pwd`, `role`)
+ VALUES ('johndoe@example.com', '54321', 'admin');
+```
+* Create a model named Customer. You can name your model to whatever you want, however if you do so, you also have to add `@Table(name= "customer")` annotation.
+* Its private instance variables should match the columns in the Customer table. If not, you will have to add `@Column(name="<correspondingColumnName>")`
+```java
+package com.springsecurity.model;
+@Entity
+public class Customer {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private int id;
+    private String email;
+    private String pwd;
+    private String role;
+// getters and setters..    
+}
+```
+* Also, need to add a repository that extends CrudRepository<Customer, Long> or JpaRepository<Customer, Long>
+* The beauty of JpaRepository: you don't have to explicitly provide implementation of Jpa Repository Methods. 
+    * When we extend the class, it will already know that Customer is a table name.
+    * findBy<instanceVariables>() - Jpa will internally provide implementation for this.
+        * can also have findBy<instanceVariables>and<anotherInstanceVariable>() - Jpa is smart enough to know this.
+```java
+package com.springsecurity.repositories;
+@Repository
+public interface CustomerRepository extends CrudRepository<Customer, Long> {
+    List<Customer> findByEmail(String email);
+}
+```
+* Here we know that Customer is our `UserDetail`, however, Spring Security doesn't know that yet.
+* So, we always need to make the user representation of the Customer table by creating a class which implements `UserDetails` interface.
+* SecurityCustomer - user representation of Customer table
+```java
+package com.springsecurity.model;
+public class SecurityCustomer implements UserDetails {
+    private static final long serialVersionUID = -6690946490872875352L;
+    private final Customer customer;
+    public SecurityCustomer(Customer customer) {
+        this.customer = customer;
+    }
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority(customer.getRole()));
+        return authorities;
+    }
+    @Override
+    public String getPassword() {
+        return customer.getPwd();
+    }
+    @Override
+    public String getUsername() {
+        return customer.getEmail();
+    }
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+}
+```
+* Finally, we need `UserDetailsService`. We can achieve this by creating a class which implements `UserDetailsService` or `UserDetailsManager` depending on your requirements.
+    * `UserDetailsService` - if we only need to read users from database
+    * `UserDetailsManager` - if need to create, update, delete users in database
+* Here is a demo where I use `UserDetailsService` but you can also do the same with `UserDetailsManager`
+```java
+package com.springsecurity.config;
+@Service
+public class BankUserDetails implements UserDetailsService {
+    @Autowired
+    private CustomerRepository customerRepository;
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        List<Customer> customer = customerRepository.findByEmail(username);
+        if (customer.size() == 0) {
+            throw new UsernameNotFoundException("User details not found for the user: " + username);
+        }
+        return new SecurityCustomer(customer.get(0));
+    }
+}
+```
+* With that, you are ready to go. Run the application and see it yourself!
 
