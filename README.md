@@ -344,3 +344,41 @@ public class BankUserDetails implements UserDetailsService {
 ```
 * With that, you are ready to go. Run the application and see it yourself!
 
+## Password Management with PasswordEncoders
+* By default, spring takes the user login credentials and retrieves all the user details from the DB to check if the 
+user login matches with the existing user details in the DB.
+* This approach has following issues:
+    * Integrity issues - someone else can access my logins and log into my accounts because they are stored as plain text inside the DB 
+    * Confidentiality - sending plain text passwords over the networks. Someone else can see my password if they try to intercept.
+* Not recommended for applications with sensitive data 
+![Default Password Validation in Spring](./img/defaultPassValidation.png)
+* To solve this issue, we should be encoding, encrypting or hashing the passwords
+### Encoding Vs Encrypting Vs Hashing
+#### Encoding
+* Defined as the process of converting from one form to the another
+* It guarantees none of 3 cryptographic properties of confidentiality, integrity, and authenticity because it involves no secret and is completely reversible.
+* Encoding can be used for reducing the size of audio and video files. For ex. decoding to binary and encoding it back to audio when reading back.
+* It can’t be used for securing data, various publicly available algorithms are used for encoding.
+* Examples: ASCII, BASE64, UNICODE
+
+#### Encrypting
+* Defined as the process of transforming data in such a way that guarantees confidentiality. To achieve that, encryption requires the use of a secret which, in cryptographic terms, we call a “key”.
+* Encryption is divided into two categories: symmetric and asymmetric, where the major difference is the number of keys needed.
+##### Symmetric Encryption
+* In symmetric encryption algorithms, a single secret (key) is used to both encrypt and decrypt data. 
+* Only those who are authorized to access the data should have the single shared key in their possession.
+* Example: file system encryption, database encryption e.g. credit card details, contact details, etc (but not password)
+##### Asymmetric Encryption
+* In asymmetric encryption algorithms, there are two keys in use: one public and one private. 
+* As their names suggest, the private key must be kept secret, whereas the public can be known to everyone. 
+* When applying encryption, the public key is used, whereas decrypting requires the private key. 
+* Anyone should be able to send us encrypted data, but only we should be able to decrypt and read it!
+* Example: TLS, VPN, SSH
+#### Hashing (used for password management)
+* In hashing, data is converted to the hash using some hashing function, which can be any number generated from string or text. Various hashing algorithms are MD5, SHA256. Data once hashed is **non-reversible**.
+* One cannot determine the original data given only the output of a hashing algorithm.
+* Given some arbitrary data along with the output of a hashing algorithm, *one can verify whether this data matches the
+  original input data without needing to see the original data*
+* You may have heard of hashing used in the context of passwords. Among many uses of hashing algorithms, this is one of the most well-known. When you sign up on a web app using a password, rather than storing your actual password, which would not only be a violation of your privacy but also a big risk for the web app owner, the web app hashes the password and stores only the hash. 
+Then, the next time you log in, the web app again hashes your password and compares this hash with the hash stored earlier. If the hashes match, the web app can be confident that you know your password even though the web app doesn’t have your actual password in storage
+* Example: Password management, verify the integrity of the downloaded file
