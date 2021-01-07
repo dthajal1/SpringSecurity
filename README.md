@@ -496,3 +496,42 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 
 * If you want to implement your own Password encoder, you can do so by implementing PasswordEncoder Interface
  
+ ## Understanding AuthenticationProvider and AuthenticationManager
+ ![Spring Security Internal Flow](./img/spring-security-internal-flow.png)
+ ### AuthenticationManager Definition
+ * AuthenticationProvider is the one which does the actual authentication logic which is why we need the support method in scenarios where we need multiple authentication logics.
+ * AuthenticationManager's job is to delegate the Authentication object to corresponding Authentication logic.
+ ```java
+package org.springframework.security.authentication;
+public interface AuthenticationManager {
+    Authentication authenticate(Authentication var1) throws AuthenticationException;
+}
+```
+* Look at its implementation, ProviderManager, as an example of how the authenticate method is implemented. 
+ ### AuthenticationProvider Definition
+ * We implement the authenticate() method to define the authentication logic.
+ * The second method in the AuthenticationProvider interface is supports(Class<?> authentication). You’ll implement this method to return true if the current AuthenticationProvider supports the type provided as the Authentication object.
+    * As an example, if we want to call this authenticate method only when we are authenticaating via user's face recognition, this would be the method to decide whether this authenticate method should be called or not.
+ ```java
+package org.springframework.security.authentication;
+public interface AuthenticationProvider {
+    Authentication authenticate(Authentication var1) throws AuthenticationException;
+
+    boolean supports(Class<?> var1);
+}
+```
+ ### Why do we need it?
+ * The AuthenticationProvider in Spring Security takes care of authentication logic.
+ * The default implementation of the AuthenticationProvider delegates the responsibility of finding the user in the system to a UserDetailsService and PasswordEncoder for password validation.
+ * What if we need add finger print recognition or face recognition or OTP Code to our authentication logic?
+ * If we have a custom authentication requirement that is not fulfilled by Spring Security framework then we can build our own authentication logic by implementing the AuthenticationProvider interface.
+ ![Authentication Provider](./img/authenticationProvider.png)
+ 
+ ### Understanding `Authentication` object
+ * `Authentication` and `UserDetails` maintain similar user details, yet they exist because Spring Security wants to give you the flexibility in each and every layer
+ * UserDetailsService and UserDetailsManager leverages UserDetails whereas AuthenticationProvider and AuthenticationManager uses Authentication object.
+ ![Authentication Object](./img/authenticationObject.png)
+ 
+ ### Implementing Custom AuthenticationProvider
+* To learn how we can add our own custom implementation of AuthenticationProvider, watch this [tutorial](https://www.udemy.com/course/spring-security-zero-to-master/learn/lecture/22632775#content).
+
