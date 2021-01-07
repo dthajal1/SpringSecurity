@@ -382,3 +382,117 @@ user login matches with the existing user details in the DB.
 * You may have heard of hashing used in the context of passwords. Among many uses of hashing algorithms, this is one of the most well-known. When you sign up on a web app using a password, rather than storing your actual password, which would not only be a violation of your privacy but also a big risk for the web app owner, the web app hashes the password and stores only the hash. 
 Then, the next time you log in, the web app again hashes your password and compares this hash with the hash stored earlier. If the hashes match, the web app can be confident that you know your password even though the web app doesn’t have your actual password in storage
 * Example: Password management, verify the integrity of the downloaded file
+
+### How the passwords are validated
+* By using some hashing algorithms which is determined by PasswordEncoder in Spring Security
+![Hashing Password Validation](./img/hasingPassValidation.png)
+
+### Password Encoder Definition
+```java
+public interface PasswordEncoder {
+    String encode(CharSequence rawPassword);
+
+    boolean matches(CharSequence rawPassword, String encodedPassword);
+
+    default boolean upgradeEncoding(String encodedPassword) {
+        return false;
+    }
+}
+```
+#### Different Implementations of PasswordEncoders provided by Spring Security
+* [NoOpPasswordEncoder](#nooppasswordencoder)
+* [StandardPasswordEncoder](#standardpasswordencoder)
+* [Pbkdf2PasswordEncoder](#pbkdf2passwordencoder)
+* [BCryptPasswordEncoder](#bcryptpasswordencoder)
+* [SCryptPasswordEncoder](#scryptpasswordencoder)
+##### NoOpPasswordEncoder
+* Not recommended
+```java
+package org.springframework.security.crypto.password;
+public final class NoOpPasswordEncoder implements PasswordEncoder {
+    private static final PasswordEncoder INSTANCE = new NoOpPasswordEncoder();
+
+    private NoOpPasswordEncoder() {
+    }
+
+    public String encode(CharSequence rawPassword) {
+        return rawPassword.toString();
+    }
+
+    public boolean matches(CharSequence rawPassword, String encodedPassword) {
+        return rawPassword.toString().equals(encodedPassword);
+    }
+
+    public static PasswordEncoder getInstance() {
+        return INSTANCE;
+    }
+}
+```
+##### StandardPasswordEncoder 
+* Uses SHA-256 algorithm. Used in legacy applications.
+* Not recommended as the algorithm is reversible
+##### Pbkdf2PasswordEncoder
+* Password-Based Key Derivation Function 2 (PBKDF2) is a pretty easy slow-hashing function that performs an HMAC (Hashed Message Authentication Code) as many times as specified by an iterations argument.
+* The three parameters received by the last call are the value of a key used for the encoding process, the number of iterations used to encode the password, and the size of the hash. The second and third parameters can influence the strength of the result.
+* You can choose more or fewer iterations as well as the length of the result. The longer the hash, the more powerful the password is.
+    * PasswordEncoder p = new Pbkdf2PasswordEncoder();
+    * PasswordEncoder p = new Pbkdf2PasswordEncoder("secret"); PasswordEncoder p = new Pbkdf2PasswordEncoder("secret", 185000, 256);
+##### BCryptPasswordEncoder
+* Recommended and most used. Cannot decrypt once encrypted.
+* BCryptPasswordEncoder uses a BCrypt strong hashing function to encode the password. 
+* You could instantiate the BCryptPasswordEncoder by calling the no-arguments constructor. 
+* But you also have the option to specify a strength coefficient representing the log rounds used in the encoding process. 
+* Moreover, you can as well alter the SecureRandom instance used for encoding.
+```java
+public class WaysOfInstantiatingBCryptPasswordEncoder {
+    PasswordEncoder p = new BCryptPasswordEncoder();
+    PasswordEncoder p = new BCryptPasswordEncoder(4);
+    SecureRandom s = SecureRandom.getInstanceStrong();
+    PasswordEncoder p = new BCryptPasswordEncoder(4, s);
+}
+```
+##### SCryptPasswordEncoder
+* Recommended
+* SCryptPasswordEncoder uses a SCrypt hashing function to encode the password. 
+* For the SCryptPasswordEncoder, you have two options to create its instances:
+```java
+public class WaysOfInstantiatingSCryptPasswordEncoder {
+    PasswordEncoder p = new SCryptPasswordEncoder();
+    PasswordEncoder p = new SCryptPasswordEncoder(16384, 8, 1, 32, 64);
+}
+```
+
+#### Implementing our application with BCryptPasswordEncoder
+* This will cause an error, since we don't have a password encrypted with BCryptPasswordEncoder in our database.
+* To add a BCryptPasswordEncoder in the DB, we can use [Online BCrypt Generator](https://bcrypt-generator.com) to generate our password and add it to the DB.
+```sql
+CREATE TABLE `customer` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `email` varchar(45) NOT NULL,
+  `pwd` varchar(200) NOT NULL,
+  `role` varchar(45) NOT NULL,
+  PRIMARY KEY (`id`)
+);
+
+INSERT INTO `customer` (`email`, `pwd`, `role`)
+ VALUES ('exampleName', '$2y$12$FdRFOtqkcz46uUpQp1.PDOkhheIL.NQq3mVL4R0jSzFOPAA1IDMK6', 'admin');
+```
+* After adding to the DB, you are ready to go!
+```java
+@Configuration
+public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+   @Bean
+   // dataSource is created with the datasource that we provided in application.properties
+   public UserDetailsService userDetailsService(DataSource dataSource) {
+       return new JdbcUserDetailsManager(dataSource);
+   }
+
+   @Bean
+   public PasswordEncoder passwordEncoder() {
+       return new BCryptPasswordEncoder();
+   }
+}
+``` 
+
+* If you want to implement your own Password encoder, you can do so by implementing PasswordEncoder Interface
+ 
