@@ -829,3 +829,35 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 ```
 * To learn what to add on the frontend side of our code watch this [tutorial](https://www.udemy.com/course/spring-security-zero-to-master/learn/lecture/22966104#content)
 
+## Understanding and Implementing Authorization
+### Authentication vs Authorization
+* As an example, checking for your identity and being able to enter inside the airport is the process of authentication.
+* Once you get inside the airport, you are only allowed to take the flight you booked. If last minute I want to fly to Washington, I can't fly there because I am only authorized to go to New York.
+* Below is a list of details and comparision between the two.
+![Authentication Vs Authorization](./img/authenticationVsAuthorization.png)
+### Internal Flow of AUTHN and AUTHZ
+* When the Client makes a request with the credentials, the authentication filter will intercept the request and validate if the person is valid and is he/she the same person whom they are claiming. 
+* If the authentication is successful, the filter stores the UserDetails in the SecurityContext. The UserDetails will have his username, authorities etc. 
+* If you configured authorization inside your application, the authorization filter will also come into picture.
+* Authorization filter will intercept and decide whether the person has access to the given path based on this authorities stored in the SecurityContext. 
+* If authorized, the request will be forwarded to the applicable controllers.
+* Below is visual of this internal flow.
+![AUTHN and AUTHZ Internal Flow](./img/authnAuthzInternalFlow.png)
+### How authorities are stored
+* Inside UserDetails which is a contract of the User inside the Spring Security, the authorities will be stored in the form of Collection of GrantedAuthority. These authorities can be fetched using the method getAuthorities()
+```java
+package org.springframework.security.core.userdetails;
+public interface UserDetails {
+    Collection<? extends GrantedAuthority> getAuthorities();
+
+    // other methods of this interface redacted for clarity
+  }
+```
+* Inside GrantedAuthority interface we have a getAuthority() method which will return the authority/role name in the form of a string. Using this value the framework will try to validate the authorities of the user with the implementation of the application.
+```java
+package org.springframework.security.core;
+public interface GrantedAuthority extends Serializable {
+    String getAuthority();
+}
+```
+* One of the class that implemnts GrantedAuthority interface is `SimpleGrantedAuthority`. Look into this class for more info.
