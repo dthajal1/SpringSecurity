@@ -535,3 +535,73 @@ public interface AuthenticationProvider {
  ### Implementing Custom AuthenticationProvider
 * To learn how we can add our own custom implementation of AuthenticationProvider, watch this [tutorial](https://www.udemy.com/course/spring-security-zero-to-master/learn/lecture/22632775#content).
 
+## Understanding CORs and CSRF
+* Especially relevant when working with microservices
+### CORS (Cross-Origin Resource Sharing)
+* Occurs when two different origins application tries to communicate with each other
+* CORS is a protocol that enables scripts running on a browser client to interact with resources from a different origin.
+* For example, if a UI app wishes to make an API call running on a different domain, it would be blocked from doing
+  so by default due to CORS. So CORS is not a security issue/attack but the default protection provided by browsers to stop sharing the data/communication between different origins.
+* "other origins" means the URL being accessed differs from the location that the JavaScript is running from, by
+  having:
+    * a different scheme (HTTP or HTTPS)
+    * a different domain
+    * a different port
+* But what if there is a legitimate scenario where cross-origin access is desirable or even necessary. For example, in
+  our EazyBank application where the UI and backend are hosted on two different ports.
+* When a server has been configured correctly to allow cross-origin resource sharing, some special headers will be
+  included. Their presence can be used to determine that a request supports CORS. Web browsers can use these
+  headers to determine whether a request should continue or fail.
+* First the browser sends a pre-flight request to the backend server to determine whether it supports CORS or not. 
+  The server can then respond to the pre-flight request with a collection of headers:
+    * Access-Control-Allow-Origin: Defines which origins may have access to the resource. A ‘*' represents any origin
+    * Access-Control-Allow-Methods: Indicates the allowed HTTP methods for cross-origin requests
+    * Access-Control-Allow-Headers: Indicates the allowed request headers for cross-origin requests
+    * Access-Control-Allow-Credentials : Indicates whether or not the response to the request can be exposed when the credentials
+      flag is true.
+    * Access-Control-Max-Age: Defines the expiration time of the result of the cached preflight request
+* Before configuring CORs
+![Before Configuring CORs](./img/before.png)
+* After configuring CORs
+![After Configuring CORs](./img/after.png)
+* Let's look at how we add configuration to resolve this issue:
+```java
+package com.springsecurity.config;
+@Configuration
+public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.cors().configurationSource(new CorsConfigurationSource() {
+            @Override
+            public CorsConfiguration getCorsConfiguration(HttpServletRequest httpServletRequest) {
+                CorsConfiguration config = new CorsConfiguration();
+                config.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
+                config.setAllowedMethods(Collections.singletonList("*"));
+                config.setAllowCredentials(true);
+                config.setAllowedHeaders(Collections.singletonList("*"));
+                config.setMaxAge(3600L);
+                return config;
+            }
+        });
+        // ignore the code below
+        http.authorizeRequests((requests) -> {
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myAccount")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myLoans")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myCards")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myBalance")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/contact")).permitAll();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/notices")).permitAll();
+        });
+        http.formLogin();
+        http.httpBasic();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+```
+### CSRF (Cross-Site Request Forgery)
+* Once we get past CORs, if it a get request we will get pass through successfully, however, if our request method is post, we will run into CSRF errors.
+* 
