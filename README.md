@@ -717,8 +717,8 @@ CREATE TABLE `contact_messages` (
 
 ## Understanding CORs and CSRF
 * Especially relevant when working with microservices
-### CORS (Cross-Origin Resource Sharing)
 * Occurs when two different origins application tries to communicate with each other
+### CORS (Cross-Origin Resource Sharing)
 * CORS is a protocol that enables scripts running on a browser client to interact with resources from a different origin.
 * For example, if a UI app wishes to make an API call running on a different domain, it would be blocked from doing
   so by default due to CORS. So CORS is not a security issue/attack but the default protection provided by browsers to stop sharing the data/communication between different origins.
@@ -811,4 +811,21 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 * Recommended way to resolve this error is by generating CSRF token
-* 
+```java
+package com.springsecurity.config;
+@Configuration
+public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+            http.csrf().ignoringAntMatchers("/contact").csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+            // we don't need to generate csrf token for contact page because it is open to anyone
+            // this will enable for backend to generate csrf token every time we receive a request
+            //  now we also need to make sure that our frontend is capturing this token and passing back to our backend so that all our post, delete, or any other state changes will be successful   
+        // ignore the comments below
+        // configuration to resolve CORS error..
+        // authorizing requests..
+        }
+}
+```
+* To learn what to add on the frontend side of our code watch this [tutorial](https://www.udemy.com/course/spring-security-zero-to-master/learn/lecture/22966104#content)
+
