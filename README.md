@@ -603,5 +603,32 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 ### CSRF (Cross-Site Request Forgery)
-* Once we get past CORs, if it a get request we will get pass through successfully, however, if our request method is post, we will run into CSRF errors.
+* Once we get past CORs, if it is a get request we will get pass through successfully, however, if our request method is post, we will run into 403 forbidden error (CSRF errors).
+* A typical Cross-Site Request Forgery (CSRF or XSRF) attack aims to perform an operation in a web application on
+  behalf of a user without their explicit consent. In general, it doesn't directly steal the user's identity, but it exploits the user to carry out an action without their will.
+* Consider a website netflix.com and the attacker’s website travelblog.com. Also assume that the victim is logged in
+  and his session is being maintained by cookies. The attacker will:
+    * Find out what action he needs to perform on behalf of the victim and find out its endpoint (for example, to change password on netflix.com a POST request is made to the website that contains new password as the parameter)
+    * Place HTML code on his website travelblog.com that will imitate a legal request to netflix.com (for example, a form with method as post and a hidden input field that contains the new password).
+    * Make sure that the form is submitted by either using “autosubmit” or luring the victim to click on a submit button.
+    * ![CSRF Attack](./img/csrfAttack.png)
+    * When the victim visits travelblog.com and that form is submitted, the victim’s browser makes a request to netflix.com for a password change. Also the browser appends the cookies with the request. The server treats it as a genuine request and resets the victim’s password to the attacker’s supplied value. This way the victim’s account gets taken over by the attacker.
+    * There are many proposed ways to implement CSRF protection on server side, among which the use of CSRF tokens is most popular. A CSRF token is a string that is tied to a user’s session but is not submitted automatically. A website proceeds only when it receives a valid CSRF token along with the cookies, since there is no way for an attacker to know a user specific token, the attacker can not perform actions on user’s behalf.
+#### Resolving CSRF error
+* One way to resolve this error is by disabling it in spring security. 
+* This is not recommended
+```java
+package com.springsecurity.config;
+@Configuration
+public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+            http.csrf().disable();
+        // ignore the comments below
+        // configuration to resolve CORS error..
+        // authorizing requests..
+        }
+}
+```
+* Recommended way to resolve this error is by generating CSRF token
 * 

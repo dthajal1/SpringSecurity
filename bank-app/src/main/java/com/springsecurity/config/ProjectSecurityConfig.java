@@ -45,10 +45,7 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 //        http.httpBasic();
 
 
-        /*
-            Custom configuration as per our requirements.
-         */
-        // configuration to resolve CORS error begins
+        // configuration to resolve CORS error
         http.cors().configurationSource(new CorsConfigurationSource() {
             @Override
             public CorsConfiguration getCorsConfiguration(HttpServletRequest httpServletRequest) {
@@ -61,7 +58,13 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
                 return config;
             }
         });
-        // configuration to resolve CORS error ends
+
+        // Resolving CSRF error by disabling it in Spring Security (not recommended)
+        http.csrf().disable();
+
+        /*
+            Custom configuration as per our requirements.
+         */
         http.authorizeRequests((requests) -> {
             ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myAccount")).authenticated();
             ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myLoans")).authenticated();
