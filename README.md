@@ -904,4 +904,103 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 #### Configuring Roles in Spring Security
-* 
+* In Spring Security the roles of the user can be configured and validated using the following ways,
+    * hasRole() —Accepts a single role name for which the endpoint will be configured and user will be validated against the single role mentioned. Only users having the same role configured can call the endpoint.
+    * hasAnyRole() — Accepts multiple roles for which the endpoint will be configured and user will be validated against the roles mentioned. Only users having any of the role configured can call the endpoint.
+    * access() — Using Spring Expression Language (SpEL) it provides you unlimited possibilities for configuring roles which are not possible with the above methods. We can use operators like OR, AND inside access() method.
+* Note :
+    * ROLE_ prefix only to be used while configuring the role in DB. But when we configure the roles, we do it only by its name.
+    * access() method can be used not only for configuring authorization based on authority or role but also with any special requirements that we have. For example we can configure access based on the country of the user or current time/date.
+* Need to update roles inside the DB
+```sql
+-- Ignore this begins
+CREATE TABLE `authorities` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `customer_id` int NOT NULL,
+  `name` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `customer_id` (`customer_id`),
+  CONSTRAINT `authorities_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`customer_id`)
+);
+
+INSERT INTO `authorities` (`customer_id`, `name`)
+ VALUES (1, 'READ');
+ 
+INSERT INTO `authorities` (`customer_id`, `name`)
+ VALUES (1, 'WRITE');
+ -- Ignore this ends
+
+UPDATE authorities SET name="ROLE_USER" WHERE id=1;
+UPDATE authorities SET name="ROLE_ADMIN" WHERE id=2;
+```
+* Need to add our own custom AuthenticationProvider. Refer [AuthenticationProvider section](#implementing-custom-authenticationprovider) or/and this [tutorial](https://www.udemy.com/course/spring-security-zero-to-master/learn/lecture/23076378#content) for more info on how to implement your own AuthenticationProvider.
+```java
+package com.springsecurity.config;
+@Component
+public class BankUsernamePwdAuthenticationProvider implements AuthenticationProvider {
+
+    @Autowired
+    private CustomerRepository customerRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    public Authentication authenticate(Authentication authentication) {
+        String username = authentication.getName();
+        String pwd = authentication.getCredentials().toString();
+        List<Customer> customer = customerRepository.findByEmail(username);
+        if (customer.size() > 0) {
+            if (passwordEncoder.matches(pwd, customer.get(0).getPwd())) {
+                return new UsernamePasswordAuthenticationToken(username, pwd, getGrantedAuthorities(customer.get(0).getAuthorities()));
+            } else {
+                throw new BadCredentialsException("Invalid password!");
+            }
+        }else {
+            throw new BadCredentialsException("No user registered with this details!");
+        }
+    }
+
+    private List<GrantedAuthority> getGrantedAuthorities(Set<Authority> authorities) {
+        List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+        for (Authority authority : authorities) {
+            grantedAuthorities.add(new SimpleGrantedAuthority(authority.getName()));
+        }
+        return grantedAuthorities;
+    }
+
+    @Override
+    public boolean supports(Class<?> authenticationType) {
+        return authenticationType.equals(UsernamePasswordAuthenticationToken.class);
+    }
+}
+```
+* Also need to add usuage of roles
+```java
+package com.springsecurity.config;
+@Configuration
+public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+     @Override
+    protected void configure(HttpSecurity http) throws Exception {
+                http.authorizeRequests((requests) -> {
+            // /myAccount will only be accessed by authenticated user with the role USER
+            // /myBalance will only be accessed by authenticated user with the role USER or ADMIN
+            // /myLoans will only be accessed by authenticated user with the role ROOT
+            // /myCards will only be accessed by authenticated user
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myAccount")).hasRole("USER");
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myLoans")).hasRole("ROOT");
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myCards")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/user")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myBalance")).hasAnyRole("USER", "ADMIN");
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/contact")).permitAll();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/notices")).permitAll();
+        });
+        http.formLogin();
+        http.httpBasic();
+
+        // configuration to resolve CORS error
+        // Resolving CSRF error by disabling it in Spring Security (not recommended)
+    }
+    // rest of the code redacted for clarity
+}
+```

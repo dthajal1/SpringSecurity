@@ -66,16 +66,15 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
             Custom configuration as per our requirements.
          */
         http.authorizeRequests((requests) -> {
-//            For this to work we need to add our own implementation of AuthenticationProvider
-            // /myAccount will only be accessed by authenticated user with the authority UPDATE
-            // /myBalance will only be accessed by authenticated user with the authority READ
-            // /myLoans will only be accessed by authenticated user with the authority DELETE
+            // /myAccount will only be accessed by authenticated user with the role USER
+            // /myBalance will only be accessed by authenticated user with the role USER or ADMIN
+            // /myLoans will only be accessed by authenticated user with the role ROOT
             // /myCards will only be accessed by authenticated user
-            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myAccount")).hasAuthority("UPDATE");
-            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myLoans")).hasAuthority("DELETE");
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myAccount")).hasRole("USER");
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myLoans")).hasRole("ROOT");
             ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myCards")).authenticated();
             ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/user")).authenticated();
-            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myBalance")).hasAuthority("READ");
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myBalance")).hasAnyRole("USER", "ADMIN");
             ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/contact")).permitAll();
             ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/notices")).permitAll();
         });
