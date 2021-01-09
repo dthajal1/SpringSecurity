@@ -1004,3 +1004,75 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
     // rest of the code redacted for clarity
 }
 ```
+
+## Ant, MVC, Regex matchers for applying restrictions on the paths
+* Spring Security offers three types of matchers methods to configure endpoints security,
+    * [MVC matchers](#mvc-matchers)
+    * [Ant matchers](#ant-matchers)
+    * [REGEX matchers](#regex-matchers)
+### MVC matchers
+* MvcMatcher() uses Spring MVC's HandlerMappingIntrospector to match the path and extract variables.
+    * `mvcMatchers(HttpMethod method, String... patterns)` — We can specify both the HTTP method and path pattern to configure restrictions.
+    ```java
+    @Configuration
+    public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+        http.authorizeRequests().mvcMatchers(HttpMethod.POST, "/example").authenticated()
+                .mvcMatchers(HttpMethod.GET, "/example").permitAll()
+                .anyRequest().denyAll();
+    }
+    ```
+    * `mvcMatchers(String... patterns)` — We can specify only path pattern to configure restrictions and all the HTTP methods will be allowed.
+    ```java
+    @Configuration
+    public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+        http.authorizeRequests().mvcMatchers("/profile/edit/**").authenticated()
+                    .anyRequest().permitAll();
+    }
+    ```
+![MVC Matchers Note](./img/mvcMatchersNote.png)
+### Ant matchers
+* ANT matchers is an implementation for Ant-style path patterns. Part of this mapping code has been kindly borrowed from Apache Ant.
+    * `antMatchers(HttpMethod method, String... patterns)`— We can specify both the HTTP method and path pattern to configure restrictions
+    ```java
+    @Configuration
+    public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+        http.authorizeRequests().antMatchers(HttpMethod.POST, "/example").authenticated()
+                .mvcMatchers(HttpMethod.GET, "/example").permitAll()
+                .anyRequest().denyAll();
+    }
+    ```
+    * `antMatchers(String... patterns)`—We can specify only path pattern to configure restrictions and all the HTTP methods will be allowed.
+    ```java
+    @Configuration
+    public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+        http.authorizeRequests().antMatchers("/profile/edit/**").authenticated()
+                .anyRequest().permitAll();
+    }
+    ```
+    * `antMatchers(HttpMethod method)`—We can specify only HTTP method ignoring path pattern to configure restrictions. This is same as antMatchers(httpMethod, “/**”)
+    ```java
+    @Configuration
+    public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+        http.authorizeRequests().antMatchers(HttpMethod.POST).authenticated()
+                .anyRequest().permitAll();
+    }
+    ```
+![Ant Matchers Note](./img/antMatchersNote.png)
+### REGEX matchers
+* Regexes can be used to represent any format of a string, so they offer unlimited possibilities for this matter
+    * `regexMatchers(HttpMethod method, String regex)`— We can specify both the HTTP method and path regex to configure restrictions
+    ```java
+    @Configuration
+    public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+         http.authorizeRequests().regexMatchers(HttpMethod.GET, ".*/(en|es|zh) ").authenticated()
+                .anyRequest().denyAll();
+    }
+    ```
+    * `regexMatchers(String regex)` - We can specify only path regex to configure restrictions and all the HTTP methods will be allowed.
+    ```java
+    @Configuration
+    public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+        http.authorizeRequests().regexMatchers(".*/(en|es|zh) ").authenticated() 
+                .anyRequest().denyAll();
+    }
+    ```
