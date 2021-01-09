@@ -66,10 +66,16 @@ public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
             Custom configuration as per our requirements.
          */
         http.authorizeRequests((requests) -> {
-            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myAccount")).authenticated();
-            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myLoans")).authenticated();
+//            For this to work we need to add our own implementation of AuthenticationProvider
+            // /myAccount will only be accessed by authenticated user with the authority UPDATE
+            // /myBalance will only be accessed by authenticated user with the authority READ
+            // /myLoans will only be accessed by authenticated user with the authority DELETE
+            // /myCards will only be accessed by authenticated user
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myAccount")).hasAuthority("UPDATE");
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myLoans")).hasAuthority("DELETE");
             ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myCards")).authenticated();
-            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myBalance")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/user")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myBalance")).hasAuthority("READ");
             ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/contact")).permitAll();
             ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/notices")).permitAll();
         });

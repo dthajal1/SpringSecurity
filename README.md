@@ -861,3 +861,47 @@ public interface GrantedAuthority extends Serializable {
 }
 ```
 * One of the class that implemnts GrantedAuthority interface is `SimpleGrantedAuthority`. Look into this class for more info.
+
+### Configuring Authorities
+* There are two ways we can authorize users. One is by using GrantedAuthority and another by using Role.
+* Here is the differences between the two.
+![GrantedAuthority Vs Role](./img/grantedAuthorityVsRole.png)
+* The names of the authorities/roles are arbitrary in nature and these names can be customized as per the business requirement
+* Roles are also represented using the same contract GrantedAuthority in Spring Security.
+* When defining a role,its name should start with the ROLE_prefix. This prefix specifies the difference between a role and an authority.
+#### Configuring Authorities in Spring Security
+* In Spring Security the authorities of the user can be configured and validated using the following ways,
+    * hasAuthority() — Accepts a single authority for which the endpoint will be configured and user will be validated against the single authority mentioned. Only users having the same authority configured can call the endpoint.
+    * hasAnyAuthority() - Accepts multiple authorities for which the endpoint will be configured and user will be validated against the authorities mentioned. Only users having any of the authority configured can call the endpoint.
+    * access() — Using Spring Expression Language (SpEL) it provides you unlimited possibilities for configuring authorities which are not possible with the above methods. We can use operators like OR, AND inside access() method.
+* Below is an example. 
+* For this example to work, we will have to configure our own class that implements AuthenticationProvider. Refer [AuthenticationProvider section](#implementing-custom-authenticationprovider) or/and this [tutorial](https://www.udemy.com/course/spring-security-zero-to-master/learn/lecture/23076378#content) for more info on how to implement your own AuthenticationProvider.
+```java
+package com.springsecurity.config;
+@Configuration
+public class ProjectSecurityConfig extends WebSecurityConfigurerAdapter {
+     @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests((requests) -> {
+            // /myAccount will only be accessed by authenticated user with the authority UPDATE
+            // /myBalance will only be accessed by authenticated user with the authority READ
+            // /myLoans will only be accessed by authenticated user with the authority DELETE
+            // /myCards will only be accessed by authenticated user
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myAccount")).hasAuthority("UPDATE");
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myLoans")).hasAuthority("DELETE");
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myCards")).authenticated();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/myBalance")).hasAuthority("READ");
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/contact")).permitAll();
+            ((ExpressionUrlAuthorizationConfigurer.AuthorizedUrl)requests.antMatchers("/notices")).permitAll();
+        });
+        http.formLogin();
+        http.httpBasic();
+
+        // configuration to resolve CORS error
+        // Resolving CSRF error by disabling it in Spring Security (not recommended)
+    }
+    // rest of the code redacted for clarity
+}
+```
+#### Configuring Roles in Spring Security
+* 
